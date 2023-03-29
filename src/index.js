@@ -1,27 +1,25 @@
 import fetchData from "./fetchImg";
+import './css/styles.css';
 import Notiflix from 'notiflix';
-import './css/styles.css'
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
 
 const formRef = document.querySelector('#search-form')
 const galleryRef = document.querySelector('.gallery');
 const inputRef = document.querySelector('input[name="searchQuery"]');
 const searchBtnRef = document.querySelector('button[type="submit"]');
 const loadMoreBtnRef = document.querySelector('button[type="button"]');
+loadMoreBtnRef.style.visibility = 'hidden';
 
 let searchQuery = '';
-// galleryRef.innerHTML = '';
-let images = [];
-loadMoreBtnRef.style.visibility = 'hidden';
-const pageNumber = 1;
-let inputValue = null;
-let previousImg = [];
-
+let pageNumber = 1;
 
 formRef.addEventListener('submit', onSearch);
 
 async function onSearch(event) {
     event.preventDefault();
     galleryRef.innerHTML = '';
+    pageNumber = 1;
     
     searchQuery = event.currentTarget.elements.searchQuery.value;
 
@@ -29,34 +27,60 @@ async function onSearch(event) {
 }
 
 async function fetchImg(searchQuery, pageNumber) {
-    if (searchQuery) {
+    if (searchQuery !== '') {
         try {
           
              await fetchData(searchQuery, pageNumber).then((images) => {
-              // const images = response.data.hits;
-              // const imagesData = images.data.hits;
-              // previousImg = [...imagesData];
-              // console.log(previousImg);
-              // pageNumber += 1;
-             return renderImg(images)})
-            
+              if (images !== []) {
+                renderImg(images);
+                lightBox = new SimpleLightbox('.gallery a', {
+                  captionsData: 'alt',
+                  captionDelay: 250,
+                }).refresh();
+
+                const { height: cardHeight } = document
+                .querySelector(".gallery")
+                .firstElementChild.getBoundingClientRect();
+
+                window.scrollBy({
+                top: cardHeight * 2,
+                behavior: "smooth",});
+                // initInfinityLoading();
+              } else {
+                Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
+              }
+             } )
         } catch (error) {
             console.error(error);
-            
         }
-  
+    } 
+    else  {
+      Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
     }
-}
 
-// console.log(searchQuery);
+}
 
  function renderImg(response) {
   const images = response.data.hits;
-    if (images !== []) {
-      console.log(images);
+  const totalHits = response.data.totalHits;
+  const delta = totalHits - images.length * pageNumber;
+
+    if (images.length !== 0) {
+      renderMarkup(images);
+      initInfinityLoading();
+      Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
+    } else if (images.length < delta) {
+        Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")}
+       else {
+       Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+    }
+ }
+
+    function renderMarkup(images) {
         const markup = images.map((image) => {
             const {webformatURL, largeImageURL, tags, likes, views, comments, downloads} = image;
-          return `<div class="photo-card">
+          return `<a href="${largeImageURL}">
+          <div class="photo-card">
           <img src="${webformatURL}" alt="${tags}" loading="lazy" class="info-img"/>
           <div class="info">
             <p class="info-item">
@@ -72,19 +96,33 @@ async function fetchImg(searchQuery, pageNumber) {
               <b>Downloads: ${downloads}</b>
             </p>
           </div>
-        </div>`;
+        </div>
+        </a>`;
         })
         .join("");
-        galleryRef.innerHTML = markup;
-        loadMoreBtnRef.style.visibility = 'visible';
-    } else if (images.length === 0) {
-       return Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+        galleryRef.insertAdjacentHTML('beforeend', markup);
+        // loadMoreBtnRef.style.visibility = 'visible';
     }
+
+loadMoreBtnRef.addEventListener('click', () => {
+  pageNumber += 1;
+  fetchImg(searchQuery, pageNumber);
+});
+
+function initInfinityLoading() {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && entries.length > 0) {
+          pageNumber += 1;
+          fetchImg(searchQuery, pageNumber);
+        }
+      }
+    },
+    { rootMargin: '400px' },
+  );
+
+  observer.observe(loadMoreBtnRef);
 }
 
-loadMoreBtnRef.addEventListener('click', (searchQuery, pageNumber) => {
-  // pageNumber += 1;
-  // const previousImg = [...images];
-  fetchImg(searchQuery, pageNumber);
 
-});

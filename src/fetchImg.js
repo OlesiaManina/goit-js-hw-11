@@ -14,7 +14,6 @@ export default async function fetchData(searchQuery, pageNumber) {
 
     try {
         const response = await axios.get(`${BASE_URL}?key=${API_KEY}&${searchParams}`);
-        // pageNumber += 1;
         return response;
     } catch (error) {
         console.error(error);
