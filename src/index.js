@@ -10,9 +10,15 @@ const inputRef = document.querySelector('input[name="searchQuery"]');
 const searchBtnRef = document.querySelector('button[type="submit"]');
 const loadMoreBtnRef = document.querySelector('button[type="button"]');
 loadMoreBtnRef.style.visibility = 'hidden';
+let lightBox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+});
 
 let searchQuery = '';
 let pageNumber = 1;
+let images = [];
+isIntersecting = false;
 
 formRef.addEventListener('submit', onSearch);
 
@@ -21,7 +27,7 @@ async function onSearch(event) {
     galleryRef.innerHTML = '';
     pageNumber = 1;
     
-    searchQuery = event.currentTarget.elements.searchQuery.value;
+    searchQuery = event.currentTarget.elements.searchQuery.value.trim();
 
     fetchImg(searchQuery, pageNumber);
 }
@@ -29,35 +35,33 @@ async function onSearch(event) {
 async function fetchImg(searchQuery, pageNumber) {
     if (searchQuery !== '') {
         try {
+
+          let images = await fetchData(searchQuery, pageNumber) 
+            if (images !== []) {
+               renderImg(images);
+              lightBox.refresh();
+
+              const { height: cardHeight } = document
+              .querySelector(".gallery")
+              .firstElementChild.getBoundingClientRect();
+
+              window.scrollBy({
+              top: cardHeight * 2,
+              behavior: "smooth",});
+              initInfinityLoading();
+            } else {
+              Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
+            }
           
-             await fetchData(searchQuery, pageNumber).then((images) => {
-              if (images !== []) {
-                renderImg(images);
-                lightBox = new SimpleLightbox('.gallery a', {
-                  captionsData: 'alt',
-                  captionDelay: 250,
-                }).refresh();
-
-                const { height: cardHeight } = document
-                .querySelector(".gallery")
-                .firstElementChild.getBoundingClientRect();
-
-                window.scrollBy({
-                top: cardHeight * 2,
-                behavior: "smooth",});
-                // initInfinityLoading();
-              } else {
-                Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
-              }
-             } )
+           
         } catch (error) {
             console.error(error);
         }
-    } 
+       }
     else  {
-      Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
+      Notiflix.Notify.failure("Sorry, your search query is empty. Please try again.")
     }
-
+  
 }
 
  function renderImg(response) {
@@ -67,7 +71,7 @@ async function fetchImg(searchQuery, pageNumber) {
 
     if (images.length !== 0) {
       renderMarkup(images);
-      initInfinityLoading();
+      infinityLoading();
       Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
     } else if (images.length < delta) {
         Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")}
@@ -104,17 +108,17 @@ async function fetchImg(searchQuery, pageNumber) {
         // loadMoreBtnRef.style.visibility = 'visible';
     }
 
-loadMoreBtnRef.addEventListener('click', () => {
-  pageNumber += 1;
-  fetchImg(searchQuery, pageNumber);
-});
+// loadMoreBtnRef.addEventListener('click', () => {
+//   pageNumber += 1;
+//   fetchImg(searchQuery, pageNumber);
+// });
 
-function initInfinityLoading() {
+function infinityLoading() {
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting && entries.length > 0) {
-          pageNumber += 1;
+          // pageNumber += 1;
           fetchImg(searchQuery, pageNumber);
         }
       }
@@ -124,5 +128,4 @@ function initInfinityLoading() {
 
   observer.observe(loadMoreBtnRef);
 }
-
 
