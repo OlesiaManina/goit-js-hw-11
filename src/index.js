@@ -16,6 +16,8 @@ let lightBox = new SimpleLightbox('.gallery a', {
 
 let searchQuery = '';
 let pageNumber = 1;
+let images = [];
+let isIntersecting = false;
 
 formRef.addEventListener('submit', onSearch);
 
