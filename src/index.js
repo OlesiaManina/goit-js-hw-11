@@ -6,8 +6,7 @@ import "simplelightbox/dist/simple-lightbox.min.css";
 
 const formRef = document.querySelector('#search-form')
 const galleryRef = document.querySelector('.gallery');
-const inputRef = document.querySelector('input[name="searchQuery"]');
-const searchBtnRef = document.querySelector('button[type="submit"]');
+
 const loadMoreBtnRef = document.querySelector('button[type="button"]');
 loadMoreBtnRef.style.visibility = 'hidden';
 let lightBox = new SimpleLightbox('.gallery a', {
@@ -17,25 +16,22 @@ let lightBox = new SimpleLightbox('.gallery a', {
 
 let searchQuery = '';
 let pageNumber = 1;
-let images = []
-let isIntersecting = false;
 
 formRef.addEventListener('submit', onSearch);
 
 async function onSearch(event) {
     event.preventDefault();
     galleryRef.innerHTML = '';
-    pageNumber = 1;
     
     searchQuery = event.currentTarget.elements.searchQuery.value.trim();
 
     fetchImg(searchQuery, pageNumber);
+    pageNumber += 1;
 }
 
 async function fetchImg(searchQuery, pageNumber) {
     if (searchQuery !== '') {
         try {
-
           let images = await fetchData(searchQuery, pageNumber) 
             if (images !== []) {
                renderImg(images);
@@ -48,20 +44,15 @@ async function fetchImg(searchQuery, pageNumber) {
               window.scrollBy({
               top: cardHeight * 2,
               behavior: "smooth",});
-              initInfinityLoading();
             } else {
               Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
             }
-          
-           
         } catch (error) {
             console.error(error);
         }
-       }
-    else  {
+       } else  {
       Notiflix.Notify.failure("Sorry, your search query is empty. Please try again.")
     }
-  
 }
 
  function renderImg(response) {
@@ -71,7 +62,6 @@ async function fetchImg(searchQuery, pageNumber) {
 
     if (images.length !== 0) {
       renderMarkup(images);
-      infinityLoading();
       Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
     } else if (images.length < delta) {
         Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")}
@@ -105,6 +95,7 @@ async function fetchImg(searchQuery, pageNumber) {
         })
         .join("");
         galleryRef.insertAdjacentHTML('beforeend', markup);
+        observer.observe(loadMoreBtnRef);
         // loadMoreBtnRef.style.visibility = 'visible';
     }
 
@@ -113,19 +104,18 @@ async function fetchImg(searchQuery, pageNumber) {
 //   fetchImg(searchQuery, pageNumber);
 // });
 
-function infinityLoading() {
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        if (entry.isIntersecting && entries.length > 0) {
-          // pageNumber += 1;
+        if (entry.isIntersecting) {
           fetchImg(searchQuery, pageNumber);
+          pageNumber += 1;
         }
       }
     },
     { rootMargin: '400px' },
   );
 
-  observer.observe(loadMoreBtnRef);
-}
+
+
 
