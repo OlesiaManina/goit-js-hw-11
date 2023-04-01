@@ -29,13 +29,13 @@ async function onSearch(event) {
     
     searchQuery = event.currentTarget.elements.searchQuery.value.trim();
     if (searchQuery !== '') {
-      // let pageNumber = 1;
+     pageNumber = 1;
     fetchImg(searchQuery, pageNumber);
-    pageNumber += 1; 
+    // pageNumber += 1; 
     } else  {
       Notiflix.Notify.failure("Sorry, your search query is empty. Please try again.")
     }
-    // pageNumber += 1; 
+    pageNumber += 1; 
     document.getElementById('search-form').reset();
 }
 
