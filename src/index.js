@@ -31,16 +31,14 @@ async function onSearch(event) {
     if (searchQuery !== '') {
      pageNumber = 1;
     fetchImg(searchQuery, pageNumber);
-    // pageNumber += 1; 
+    pageNumber += 1; 
     } else  {
       Notiflix.Notify.failure("Sorry, your search query is empty. Please try again.")
     }
-    pageNumber += 1; 
     document.getElementById('search-form').reset();
 }
 
 async function fetchImg(searchQuery, pageNumber) {
-  // pageNumber += 1; 
         try {
           let images = await fetchData(searchQuery, pageNumber) 
             if (images !== []) {
@@ -63,10 +61,13 @@ async function fetchImg(searchQuery, pageNumber) {
       renderMarkup(images);
       Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
     } else if (images.length < delta) {
-        Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")
-        loadMoreBtnRef.disabled = true;}
+       Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")
+        loadMoreBtnRef.disabled = true;
+        return;
+      }
        else {
        Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
+       return;
     }
  }
 
@@ -95,21 +96,21 @@ async function fetchImg(searchQuery, pageNumber) {
         })
         .join("");
         galleryRef.insertAdjacentHTML('beforeend', markup);
-        observer.observe(loadMoreBtnRef);
-        // loadMoreBtnRef.style.visibility = 'visible';
+        // observer.observe(loadMoreBtnRef);
+        loadMoreBtnRef.style.visibility = 'visible';
     }
 
-// loadMoreBtnRef.addEventListener('click', () => {
-//   pageNumber += 1;
-//   fetchImg(searchQuery, pageNumber);
-//       const { height: cardHeight } = document
-//               .querySelector(".gallery")
-//               .firstElementChild.getBoundingClientRect();
+loadMoreBtnRef.addEventListener('click', () => {
+  fetchImg(searchQuery, pageNumber);
+      const { height: cardHeight } = document
+              .querySelector(".gallery")
+              .firstElementChild.getBoundingClientRect();
 
-//               window.scrollBy({
-//               top: cardHeight * 2,
-//               behavior: "smooth",});
-// });
+              window.scrollBy({
+              top: cardHeight * 2,
+              behavior: "smooth",});
+    pageNumber += 1;
+});
 
   const observer = new IntersectionObserver(
     (entries) => {
