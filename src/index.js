@@ -23,12 +23,13 @@ formRef.addEventListener('submit', onSearch);
 
 async function onSearch(event) {
     event.preventDefault();
+    let pageNumber = 1;
     galleryRef.innerHTML = '';
     
     searchQuery = event.currentTarget.elements.searchQuery.value.trim();
 
     fetchImg(searchQuery, pageNumber);
-    pageNumber += 1;
+    pageNumber += 1; 
 }
 
 async function fetchImg(searchQuery, pageNumber) {
@@ -38,14 +39,6 @@ async function fetchImg(searchQuery, pageNumber) {
             if (images !== []) {
                renderImg(images);
               lightBox.refresh();
-
-              const { height: cardHeight } = document
-              .querySelector(".gallery")
-              .firstElementChild.getBoundingClientRect();
-
-              window.scrollBy({
-              top: cardHeight * 2,
-              behavior: "smooth",});
             } else {
               Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
             }
@@ -66,7 +59,8 @@ async function fetchImg(searchQuery, pageNumber) {
       renderMarkup(images);
       Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
     } else if (images.length < delta) {
-        Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")}
+        Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")
+        loadMoreBtnRef.disabled = true;}
        else {
        Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
     }
@@ -97,14 +91,21 @@ async function fetchImg(searchQuery, pageNumber) {
         })
         .join("");
         galleryRef.insertAdjacentHTML('beforeend', markup);
-        observer.observe(loadMoreBtnRef);
-        // loadMoreBtnRef.style.visibility = 'visible';
+        // observer.observe(loadMoreBtnRef);
+        loadMoreBtnRef.style.visibility = 'visible';
     }
 
-// loadMoreBtnRef.addEventListener('click', () => {
-//   pageNumber += 1;
-//   fetchImg(searchQuery, pageNumber);
-// });
+loadMoreBtnRef.addEventListener('click', () => {
+  pageNumber += 1;
+  fetchImg(searchQuery, pageNumber);
+      const { height: cardHeight } = document
+              .querySelector(".gallery")
+              .firstElementChild.getBoundingClientRect();
+
+              window.scrollBy({
+              top: cardHeight * 2,
+              behavior: "smooth",});
+});
 
   const observer = new IntersectionObserver(
     (entries) => {
