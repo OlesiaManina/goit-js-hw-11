@@ -7,7 +7,6 @@ import "simplelightbox/dist/simple-lightbox.min.css";
 const formRef = document.querySelector('#search-form')
 const galleryRef = document.querySelector('.gallery');
 const inputRef = document.querySelector('input[name="searchQuery"]');
-console.log(inputRef);
 
 const loadMoreBtnRef = document.querySelector('button[type="button"]');
 loadMoreBtnRef.style.visibility = 'hidden';
@@ -41,37 +40,37 @@ async function onSearch(event) {
 async function fetchImg(searchQuery, pageNumber) {
         try {
           let images = await fetchData(searchQuery, pageNumber) 
-            if (images !== []) {
-               renderImg(images);
+
+            if (images.data.hits.length !== 0) {
+             renderImg(images, pageNumber);
               lightBox.refresh();
+          
             } else {
-              Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
+             return Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
             }
         } catch (error) {
             console.error(error);
         }
 }
 
- function renderImg(response) {
+ function renderImg(response, pageNumber) {
   const images = response.data.hits;
   const totalHits = response.data.totalHits;
-  const delta = totalHits - images.length * pageNumber;
-
-    if (images.length !== 0) {
-      renderMarkup(images);
+  const lastPage = Math.ceil(totalHits / 40);
+ 
+    renderMarkup(images);
+    if (pageNumber === 1) {
       Notiflix.Notify.success(`Hooray! We found ${totalHits} images.`);
-    } else if (images.length < delta) {
-       Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")
-        loadMoreBtnRef.disabled = true;
-        return;
-      }
-       else {
-       Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.");
-       return;
+    }
+
+    if (lastPage === pageNumber) {
+    loadMoreBtnRef.style.visibility = 'hidden';
+     Notiflix.Notify.info("We're sorry, but you've reached the end of search results.") 
     }
  }
 
     function renderMarkup(images) {
+      console.log(images.length);
         const markup = images.map((image) => {
             const {webformatURL, largeImageURL, tags, likes, views, comments, downloads} = image;
           return `<a href="${largeImageURL}">
@@ -96,6 +95,7 @@ async function fetchImg(searchQuery, pageNumber) {
         })
         .join("");
         galleryRef.insertAdjacentHTML('beforeend', markup);
+  
         // observer.observe(loadMoreBtnRef);
         loadMoreBtnRef.style.visibility = 'visible';
     }
@@ -109,7 +109,7 @@ loadMoreBtnRef.addEventListener('click', () => {
               window.scrollBy({
               top: cardHeight * 2,
               behavior: "smooth",});
-    pageNumber += 1;
+      pageNumber += 1;
 });
 
   const observer = new IntersectionObserver(
