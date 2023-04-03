@@ -33,6 +33,7 @@ async function onSearch(event) {
     pageNumber += 1; 
     } else  {
       Notiflix.Notify.failure("Sorry, your search query is empty. Please try again.")
+      loadMoreBtnRef.style.visibility = 'hidden';
     }
     document.getElementById('search-form').reset();
 }
@@ -70,7 +71,6 @@ async function fetchImg(searchQuery, pageNumber) {
  }
 
     function renderMarkup(images) {
-      console.log(images.length);
         const markup = images.map((image) => {
             const {webformatURL, largeImageURL, tags, likes, views, comments, downloads} = image;
           return `<a href="${largeImageURL}">
@@ -96,8 +96,8 @@ async function fetchImg(searchQuery, pageNumber) {
         .join("");
         galleryRef.insertAdjacentHTML('beforeend', markup);
   
-        // observer.observe(loadMoreBtnRef);
-        loadMoreBtnRef.style.visibility = 'visible';
+        observer.observe(loadMoreBtnRef);
+        // loadMoreBtnRef.style.visibility = 'visible';
     }
 
 loadMoreBtnRef.addEventListener('click', () => {
