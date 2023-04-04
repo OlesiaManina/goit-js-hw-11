@@ -67,6 +67,7 @@ async function fetchImg(searchQuery, pageNumber) {
     if (lastPage === pageNumber) {
     loadMoreBtnRef.style.visibility = 'hidden';
      Notiflix.Notify.info("We're sorry, but you've reached the end of search results.") 
+     observer.unobserve(loadMoreBtnRef);
     }
  }
 
@@ -95,22 +96,25 @@ async function fetchImg(searchQuery, pageNumber) {
         })
         .join("");
         galleryRef.insertAdjacentHTML('beforeend', markup);
-  
         observer.observe(loadMoreBtnRef);
+
+        // without scroll
         // loadMoreBtnRef.style.visibility = 'visible';
     }
 
-loadMoreBtnRef.addEventListener('click', () => {
-  fetchImg(searchQuery, pageNumber);
-      const { height: cardHeight } = document
-              .querySelector(".gallery")
-              .firstElementChild.getBoundingClientRect();
+    // without scroll
 
-              window.scrollBy({
-              top: cardHeight * 2,
-              behavior: "smooth",});
-      pageNumber += 1;
-});
+// loadMoreBtnRef.addEventListener('click', () => {
+//   fetchImg(searchQuery, pageNumber);
+//       const { height: cardHeight } = document
+//               .querySelector(".gallery")
+//               .firstElementChild.getBoundingClientRect();
+
+//               window.scrollBy({
+//               top: cardHeight * 2,
+//               behavior: "smooth",});
+//       pageNumber += 1;
+// });
 
   const observer = new IntersectionObserver(
     (entries) => {
